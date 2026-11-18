@@ -1,0 +1,1968 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>家庭财务体检与资产配置规划器（DeepSeek 增强版）</title>
+<!-- 替换为国内高速CDN（BootCDN），彻底解决国内无法加载或白屏卡顿问题 -->
+<script src="https://cdn.bootcdn.net/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --primary: #1a56db;
+    --primary-light: #ebf2ff;
+    --text: #111827;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --green: #059669;
+    --green-bg: #ecfdf5;
+    --amber: #d97706;
+    --amber-bg: #fffbeb;
+    --red: #dc2626;
+    --red-bg: #fef2f2;
+    --purple: #7c3aed;
+    --purple-bg: #f5f3ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    padding: 16px;
+  }
+  .container { max-width: 1280px; margin: 0 auto; }
+  header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1a56db 100%);
+    color: #fff;
+    padding: 24px 28px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px rgba(26, 86, 219, 0.15);
+  }
+  header h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  header p { font-size: 13.5px; opacity: 0.94; }
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .privacy-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.16);
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: 12px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 440px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 1000px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  .card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    margin-bottom: 18px;
+  }
+  .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .form-group { margin-bottom: 11px; }
+  .form-group label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 4px;
+  }
+  .form-group label span.val-tag { color: var(--primary); font-weight: 700; }
+  .two-col-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 480px) {
+    .two-col-inputs { grid-template-columns: 1fr; }
+  }
+  input[type="number"], input[type="password"], input[type="text"], select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    background: #fff;
+  }
+  input::placeholder {
+    color: #9ca3af;
+    font-weight: 400;
+    font-size: 12px;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(26,86,219,0.12);
+  }
+  input[type="range"] { width: 100%; margin-top: 5px; accent-color: var(--primary); cursor: pointer; }
+  .section-divider {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: 0.3px;
+    margin: 15px 0 9px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+  }
+  .section-divider.first {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .btn-analyze {
+    flex: 1;
+    padding: 12px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-analyze:hover { background: #1e40af; }
+  .btn-reset {
+    padding: 12px 14px;
+    background: #f3f4f6;
+    color: #4b5563;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-reset:hover { background: #e5e7eb; }
+
+  /* DeepSeek 专属 AI 点评面板 */
+  .deepseek-card {
+    background: linear-gradient(135deg, #f0f5ff 0%, #f5f3ff 100%);
+    border: 1px solid #c7d2fe;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+  }
+  .ds-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .ds-title {
+    font-size: 15.5px;
+    font-weight: 800;
+    color: #1e3a8a;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ds-badge {
+    font-size: 11px;
+    background: #4f46e5;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-weight: 700;
+  }
+  .ds-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn-ds {
+    padding: 7px 13px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    background: #4f46e5;
+    color: #fff;
+    transition: background 0.2s;
+  }
+  .btn-ds:hover { background: #4338ca; }
+  .btn-ds:disabled { background: #9ca3af; cursor: not-allowed; }
+  .btn-ds-cfg {
+    padding: 7px 11px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid #c7d2fe;
+    background: #fff;
+    color: #374151;
+  }
+  .ds-config-drawer {
+    display: none;
+    background: #fff;
+    border: 1px solid #dbeafe;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 12px;
+    font-size: 12.5px;
+  }
+  .ds-config-drawer.open { display: block; }
+  .ds-output {
+    background: #fff;
+    border: 1px solid #e0e7ff;
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 13.5px;
+    color: #1f2937;
+    line-height: 1.75;
+    white-space: pre-wrap;
+  }
+
+  /* 导出工具栏 */
+  .export-bar {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .export-bar-info {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+  }
+  .export-btns {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn-export {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+  }
+  .btn-export-img {
+    background: var(--primary);
+    color: #fff;
+  }
+  .btn-export-img:hover { background: #1e40af; }
+  .btn-export-pdf {
+    background: #f0fdf4;
+    color: var(--green);
+    border-color: #bbf7d0;
+  }
+  .btn-export-pdf:hover { background: #dcfce7; }
+
+  /* 右侧看板 */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 720px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+  .kpi-box {
+    background: var(--card);
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .kpi-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .kpi-value { font-size: 18px; font-weight: 800; color: var(--text); }
+  .kpi-sub { font-size: 11px; margin-top: 3px; font-weight: 600; }
+
+  .profile-verdict {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  }
+  .profile-verdict-left { flex: 1; min-width: 240px; }
+  .profile-verdict-label { font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+  .profile-verdict-name { font-size: 19px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .profile-verdict-summary { font-size: 13.5px; color: #4b5563; margin-top: 5px; }
+  .profile-pill {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 99px;
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+
+  .strategy-banner {
+    padding: 16px 18px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    border-left: 5px solid var(--primary);
+    background: var(--primary-light);
+  }
+  .strategy-banner.idle { background: #f8fafc; border-left-color: #9ca3af; }
+  .strategy-banner.danger { background: var(--red-bg); border-left-color: var(--red); }
+  .strategy-banner.warn { background: var(--amber-bg); border-left-color: var(--amber); }
+  .strategy-banner.good { background: var(--green-bg); border-left-color: var(--green); }
+  .strategy-banner.vip { background: var(--purple-bg); border-left-color: var(--purple); }
+  .strategy-tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 2px 9px;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.07);
+    margin-bottom: 6px;
+  }
+  .strategy-title { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+  .strategy-desc { font-size: 13.5px; color: #374151; }
+
+  .structure-box {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 13px 15px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .mini-pillar-bar {
+    height: 10px;
+    border-radius: 99px;
+    overflow: hidden;
+    display: flex;
+    margin: 8px 0 6px;
+    background: #e5e7eb;
+  }
+  .alloc-bar {
+    height: 16px;
+    border-radius: 99px;
+    overflow: hidden;
+    display: flex;
+    margin: 12px 0;
+    background: #e5e7eb;
+  }
+  .alloc-seg { height: 100%; transition: width 0.35s ease; }
+  .alloc-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 640px) { .alloc-grid { grid-template-columns: 1fr; } }
+  .alloc-item {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 13px;
+    background: #fafafa;
+  }
+  .alloc-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .alloc-name { font-size: 13.5px; font-weight: 700; }
+  .alloc-pct { font-size: 13.5px; font-weight: 800; color: var(--primary); }
+  .alloc-amt { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+  .alloc-diff { font-size: 12px; font-weight: 700; margin-bottom: 5px; }
+  .alloc-note { font-size: 12px; color: var(--muted); line-height: 1.55; }
+
+  .step-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 13px;
+    background: #fff;
+  }
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 7px;
+    flex-wrap: wrap;
+  }
+  .step-num {
+    background: var(--primary);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+  .step-title { font-size: 14.5px; font-weight: 700; }
+  .step-action { font-size: 13.5px; color: #374151; margin-bottom: 9px; line-height: 1.65; }
+  .plan-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid var(--primary);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12.8px;
+    color: #1e3a8a;
+    margin-bottom: 9px;
+    line-height: 1.65;
+  }
+  .plan-box strong { color: #1d4ed8; }
+  .plan-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 7px;
+  }
+  @media (max-width: 640px) { .plan-grid { grid-template-columns: 1fr; } }
+  .plan-pill {
+    background: #fff;
+    border: 1px solid #dbeafe;
+    border-radius: 6px;
+    padding: 6px 9px;
+    font-size: 12px;
+  }
+  .plan-pill span { display: block; color: var(--muted); font-size: 11px; }
+  .plan-pill b { color: var(--primary); font-size: 13.5px; }
+
+  .pitfall-box {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 12.5px;
+    color: #92400e;
+    line-height: 1.6;
+  }
+  .pitfall-box strong { color: #b45309; }
+
+  .dream-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 720px) { .dream-summary-grid { grid-template-columns: repeat(2, 1fr); } }
+  .dream-kpi {
+    border-radius: 10px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    background: #f8fafc;
+  }
+  .dream-kpi.highlight {
+    background: linear-gradient(135deg, #ebf2ff 0%, #f5f3ff 100%);
+    border-color: #c7d2fe;
+  }
+  .dream-kpi.profit {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+  }
+  .dream-kpi-lbl { font-size: 11.5px; color: var(--muted); font-weight: 600; margin-bottom: 3px; }
+  .dream-kpi-val { font-size: 17px; font-weight: 800; color: var(--text); }
+  .dream-kpi-sub { font-size: 11px; color: #4b5563; margin-top: 2px; }
+
+  .sim-controls {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 14px;
+    background: #f9fafb;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  @media (max-width: 640px) { .sim-controls { grid-template-columns: 1fr; } }
+  canvas { width: 100%; height: 240px; display: block; }
+
+  .bucket-yield-section {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--border);
+  }
+  .bucket-yield-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .bucket-yield-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 640px) { .bucket-yield-grid { grid-template-columns: 1fr; } }
+  .by-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 13px;
+    background: #fff;
+  }
+  .by-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .by-nums {
+    font-size: 12px;
+    color: #374151;
+    line-height: 1.6;
+  }
+  .milestone-table-wrap {
+    overflow-x: auto;
+    margin-top: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  table.milestone-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    text-align: right;
+  }
+  table.milestone-table th {
+    background: #f3f4f6;
+    color: #374151;
+    font-weight: 700;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  table.milestone-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #111827;
+  }
+  table.milestone-table tr:last-child td {
+    border-bottom: none;
+    background: #ebf2ff;
+    font-weight: 800;
+  }
+  table.milestone-table th:first-child,
+  table.milestone-table td:first-child {
+    text-align: left;
+  }
+
+  .bottom-save-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #ebf2ff 100%);
+    border: 1px solid #bfdbfe;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .disclaimer-footer {
+    margin-top: 12px;
+    padding: 16px 20px;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .disclaimer-footer strong { color: #374151; }
+
+  .flash { animation: pulseHighlight 0.45s ease; }
+  @keyframes pulseHighlight {
+    0% { opacity: 0.55; transform: translateY(2px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .no-print { display: none !important; }
+    .grid { display: block; }
+    .card, .kpi-box, .profile-verdict, .deepseek-card {
+      box-shadow: none !important;
+      break-inside: avoid;
+      margin-bottom: 12px;
+    }
+    header {
+      background: #1e3a8a !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>家庭财务体检与资产配置规划器</h1>
+    <p>把家里的存款、投资、房子车子和欠款理清楚，用大白话帮您算明白：手头该留多少应急钱、3~5年安稳钱怎么放、5年以上长线钱怎么配，以及具体每月定期投多少</p>
+    <div class="badge-row">
+      <span class="privacy-badge">🇨🇳 国内直连极速版 · 无任何境外服务依赖</span>
+      <span class="privacy-badge">🤖 接入国产 DeepSeek 大模型深度诊断</span>
+      <span class="privacy-badge">🔒 数据仅在本地浏览器计算，绝不留存上传</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- 左侧录入区 -->
+    <div class="card no-print">
+      <div class="card-title">
+        <span>1. 填一填家里的家底与收支</span>
+        <span style="font-size:12px;color:var(--primary);font-weight:600;">填完自动出结果</span>
+      </div>
+
+      <div class="section-divider first">一、随时能取的活钱与专项账户</div>
+      <div class="two-col-inputs">
+        <div class="form-group">
+          <label>现金 / 存款 / 零钱理财 (元)</label>
+          <input type="number" id="cashSavings" value="" placeholder="活期/定期/余额宝等" step="10000" oninput="runEngine()">
+        </div>
+        <div class="form-group">
+          <label>公积金 / 个人养老金 (元)</label>
+          <input type="number" id="providentFund" value="" placeholder="账户里的余额，没有留空" step="10000" oninput="runEngine()">
+        </div>
+      </div>
+
+      <div class="section-divider">二、已经投出去的钱（理财/股票/黄金/保险）</div>
+      <div class="two-col-inputs">
+        <div class="form-group">
+          <label>国债 / 债券 / 稳健理财 (元)</label>
+          <input type="number" id="existingBond" value="" placeholder="买过的稳健固收类" step="10000" oninput="runEngine()">
+        </div>
+        <div class="form-group">
+          <label>股票 / 基金当前市值 (元)</label>
+          <input type="number" id="existingEquity" value="" placeholder="股票/指数/混合基金" step="10000" oninput="runEngine()">
+        </div>
+      </div>
+      <div class="two-col-inputs">
+        <div class="form-group">
+          <label>黄金及贵金属市值 (元)</label>
+          <input type="number" id="existingGold" value="" placeholder="金条/积存金/黄金基金" step="5000" oninput="runEngine()">
+        </div>
+        <div class="form-group">
+          <label>储蓄型保单退保价值 (元)</label>
+          <input type="number" id="insuranceCashVal" value="" placeholder="年金/增额寿现金价值" step="10000" oninput="runEngine()">
+        </div>
+      </div>
+
+      <div class="section-divider">三、房子、车子、其他值钱东西与欠款</div>
+      <div class="two-col-inputs">
+        <div class="form-group">
+          <label>名下房产大概能卖多少钱 (元)</label>
+          <input type="number" id="houseValue" value="" placeholder="自住+出租房产总估价" step="50000" oninput="runEngine()">
+        </div>
+        <div class="form-group">
+          <label>车子现在大概值多少钱 (元)</label>
+          <input type="number" id="carValue" value="" placeholder="名下车辆当前二手估价" step="10000" oninput="runEngine()">
+        </div>
+      </div>
+      <div class="two-col-inputs">
+        <div class="form-group">
+          <label>其他有价值资产 (元)</label>
+          <input type="number" id="otherAssets" value="" placeholder="收藏品/合伙股份/别人欠你的钱" step="10000" oninput="runEngine()">
+        </div>
+        <div class="form-group">
+          <label>还欠银行/外界多少钱 (元)</label>
+          <input type="number" id="totalDebt" value="" placeholder="房贷/车贷/借款剩余总本金" step="10000" oninput="runEngine()">
+        </div>
+      </div>
+
+      <div class="section-divider">四、家里每个月能赚多少钱（到手）</div>
+      <div class="two-col-inputs">
+        <div class="form-group">
+          <label>本人到手月薪 (元)</label>
+          <input type="number" id="myIncome" value="" placeholder="扣完五险一金和税后" step="500" oninput="runEngine()">
+        </div>
+        <div class="form-group">
+          <label>配偶到手月薪 (元)</label>
+          <input type="number" id="spouseIncome" value="" placeholder="扣完五险一金和税后" step="500" oninput="runEngine()">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>每月额外收入（副业 / 房租 / 平均奖金）(元)</label>
+        <input type="number" id="extraIncome" value="" placeholder="没有额外收入就留空" step="1000" oninput="runEngine()">
+      </div>
+
+      <div class="section-divider">五、家里每个月必须花掉多少钱</div>
+      <div class="form-group">
+        <label>每月还贷款（房贷/车贷/消费贷等） <span class="val-tag" id="lblLoan">未填</span></label>
+        <input type="number" id="loanPayment" value="" placeholder="每月总共要还多少月供，没有填 0" step="200" oninput="syncSlider('loanPayment','rngLoan');runEngine()">
+        <input type="range" id="rngLoan" min="0" max="40000" step="200" value="0" oninput="syncInput('rngLoan','loanPayment');runEngine()">
+      </div>
+      <div class="form-group">
+        <label>每月房租支出 (元) <span class="val-tag" id="lblRent">未填</span></label>
+        <input type="number" id="rentPayment" value="" placeholder="每月交多少房租，没有填 0" step="100" oninput="syncSlider('rentPayment','rngRent');runEngine()">
+        <input type="range" id="rngRent" min="0" max="20000" step="100" value="0" oninput="syncInput('rngRent','rentPayment');runEngine()">
+      </div>
+      <div class="form-group">
+        <label>开车养车与水电煤网费 (元) <span class="val-tag" id="lblCar">未填</span></label>
+        <input type="number" id="carUtility" value="" placeholder="油费电费物业网费手机费等" step="100" oninput="syncSlider('carUtility','rngCar');runEngine()">
+        <input type="range" id="rngCar" min="0" max="15000" step="100" value="0" oninput="syncInput('rngCar','carUtility');runEngine()">
+      </div>
+      <div class="form-group">
+        <label>吃饭买菜及日常杂项开销 (元) <span class="val-tag" id="lblMisc">未填</span></label>
+        <input type="number" id="miscExpense" value="" placeholder="全家日常吃穿日用开销" step="100" oninput="syncSlider('miscExpense','rngMisc');runEngine()">
+        <input type="range" id="rngMisc" min="0" max="20000" step="100" value="0" oninput="syncInput('rngMisc','miscExpense');runEngine()">
+      </div>
+
+      <div class="section-divider">六、您对赚钱和亏钱的心理承受力</div>
+      <div class="form-group">
+        <label>选一个最符合您心态的选项</label>
+        <select id="riskProfile" onchange="runEngine()">
+          <option value="conservative">求稳为主（本金一点都不能亏，赚得少点没关系）</option>
+          <option value="balanced" selected>稳中求进（能接受小幅上下波动，希望跑赢物价上涨）</option>
+          <option value="growth">积极增值（5年以上不用的钱，能扛住短期大跌换长期高回报）</option>
+        </select>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-analyze" onclick="runEngine(true)">🔄 生成大白话财务体检报告</button>
+        <button class="btn-reset" onclick="clearAll()">清空重填</button>
+      </div>
+    </div>
+
+    <!-- 右侧动态输出区 -->
+    <div id="outputPanel">
+      <!-- 顶部一键导出栏 -->
+      <div class="export-bar no-print">
+        <div class="export-bar-info">
+          📑 <strong>家庭专属财务体检诊断表</strong> <span id="reportDateTag" style="font-size:12px;color:var(--muted);font-weight:400;margin-left:6px;"></span>
+        </div>
+        <div class="export-btns">
+          <button class="btn-export btn-export-img" onclick="exportReportImage(this)">🖼️ 一键保存高清长图</button>
+          <button class="btn-export btn-export-pdf" onclick="exportReportPDF()">📄 导出/打印为 PDF</button>
+        </div>
+      </div>
+
+      <!-- 真正被截图保存的核心诊断区容器 -->
+      <div id="printableReportArea">
+        <!-- 顶部6个核心指标 -->
+        <div class="kpi-row">
+          <div class="kpi-box">
+            <div class="kpi-label">全部家底总值（含房车存款）</div>
+            <div class="kpi-value" id="kpiTotalAsset">--</div>
+            <div class="kpi-sub" id="kpiAssetSplit" style="color:var(--muted);">等待填写家底</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">真正属于自己的净家底（减掉欠款）</div>
+            <div class="kpi-value" id="kpiNetWorth">--</div>
+            <div class="kpi-sub" id="kpiLeverage" style="color:var(--muted);">欠款占总资产 --</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">手头能灵活调配的金融钱</div>
+            <div class="kpi-value" id="kpiFinAsset">--</div>
+            <div class="kpi-sub" id="kpiFinRatio" style="color:var(--muted);">含存款/理财/股票/黄金</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">全家每月总到手收入</div>
+            <div class="kpi-value" id="kpiIncome">--</div>
+            <div class="kpi-sub" id="kpiStableRatio" style="color:var(--muted);">等待填写收入</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">每月能攒下来的钱（收入减支出）</div>
+            <div class="kpi-value" id="kpiSavings">--</div>
+            <div class="kpi-sub" id="kpiSaveRate" style="color:var(--muted);">--</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">万一断了收入，活钱能撑多久</div>
+            <div class="kpi-value" id="kpiRunway">--</div>
+            <div class="kpi-sub" id="kpiRunwayTag" style="color:var(--muted);">--</div>
+          </div>
+        </div>
+
+        <!-- 系统自动判定当前家庭财务状况画像 -->
+        <div class="profile-verdict" id="profileVerdictCard">
+          <div class="profile-verdict-left">
+            <div class="profile-verdict-label">📋 综合您家里的家底、欠款和每月收支，系统帮您做出的整体判断是：</div>
+            <div class="profile-verdict-name" id="profileName">
+              <span style="color:var(--muted);">⏳ 请在左侧填好家里家底和收支，马上出诊断</span>
+              <span class="profile-pill" id="profileRiskTag">稳中求进心态</span>
+            </div>
+            <div class="profile-verdict-summary" id="profileSummary">把左边的存款、投资、房子车子、欠款以及每月收入开销填进去，下面会用大白话告诉您家里的钱放得合不合理、该怎么调整。</div>
+          </div>
+        </div>
+
+        <!-- 国产 DeepSeek AI 深度定制诊断模块 -->
+        <div class="deepseek-card">
+          <div class="ds-header">
+            <div class="ds-title">
+              <span>🤖 DeepSeek 家庭财务顾问深度点评</span>
+              <span class="ds-badge">DeepSeek-V3 国内直连</span>
+            </div>
+            <div class="ds-actions no-print">
+              <button class="btn-ds-cfg" onclick="toggleDsConfig()">⚙️ 配置 DeepSeek Key / 接口</button>
+              <button class="btn-ds" id="btnAskDeepSeek" onclick="askDeepSeekAI()">✨ 让 DeepSeek 深度分析</button>
+            </div>
+          </div>
+
+          <div class="ds-config-drawer no-print" id="dsConfigDrawer">
+            <div style="margin-bottom:8px;color:#374151;">
+              <strong>接口配置说明：</strong>本页面已切换为国产 <code>https://api.deepseek.com/chat/completions</code>（模型：<code>deepseek-chat</code>），国内无需翻墙直接连通。为保护您的账户安全，密钥仅保存在您当前浏览器的本地缓存中：
+            </div>
+            <div class="two-col-inputs" style="margin-bottom:8px;">
+              <div>
+                <label style="font-size:11.5px;font-weight:700;display:block;margin-bottom:3px;">DeepSeek API Key（以 sk- 开头）</label>
+                <input type="password" id="dsApiKey" placeholder="输入您的 DeepSeek API Key" onchange="saveDsConfig()">
+              </div>
+              <div>
+                <label style="font-size:11.5px;font-weight:700;display:block;margin-bottom:3px;">接口地址（默认官方直连，可填国内云函数代理）</label>
+                <input type="text" id="dsApiUrl" value="https://api.deepseek.com/chat/completions" onchange="saveDsConfig()">
+              </div>
+            </div>
+            <div style="font-size:11.5px;color:var(--muted);">
+              💡 如果未填写 API Key，系统会自动使用内置的“本地智能诊断引擎”生成报告，页面所有功能 100% 正常可用。
+            </div>
+          </div>
+
+          <div class="ds-output" id="dsOutputBox">填好左侧家里家底与收支后，点击右上角「✨ 让 DeepSeek 深度分析」（需在设置中填入您的 DeepSeek API Key），即可调用国产 DeepSeek 大模型为您生成个性化的家庭理财与化债大白话建议。</div>
+        </div>
+
+        <!-- 2. 全盘资产结构透视与金融资产配置模型 -->
+        <div class="card">
+          <div class="card-title">
+            <span>2. 家里家底结构体检与“四笔钱”分配参考</span>
+            <span id="regimeBadge" style="font-size:12px;color:var(--muted);font-weight:700;">等待填写数据</span>
+          </div>
+
+          <div id="strategyBanner" class="strategy-banner idle">
+            <div class="strategy-tag" id="strategyTag">尚未开始测算</div>
+            <div class="strategy-title" id="strategyTitle">请在左侧填写您家的存款、资产、欠款和每月收支</div>
+            <div class="strategy-desc" id="strategyDesc">系统会把您的钱按<strong>“应急活钱（1年内随时用）”、“安稳底仓（3~5年不动）”、“长线增值（5年以上不动）”、“避险压箱底（黄金）”</strong>分成四笔钱，帮您算清楚每笔钱大概放多少更合适。</div>
+          </div>
+
+          <div class="structure-box" id="assetStructureNote">
+            <strong>📊 家里全部家底分布情况：</strong>填好资产后，这里会帮您看清“房子车子等不动产”是不是占得太重、手头的活钱够不够用。
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;flex-wrap:wrap;gap:6px;">
+            <span>手头可调配的金融钱（<span id="dispTotalFin">¥0</span>）按使用时间分成“四笔钱”参考：</span>
+            <span style="color:var(--muted);font-size:12px;">已自动对比您现有的存款、理财、股票和黄金</span>
+          </div>
+          <div class="alloc-bar" id="allocBar"></div>
+          <div class="alloc-grid" id="allocGrid"></div>
+
+          <div style="margin-top:14px;padding:12px;background:#f8fafc;border-radius:10px;border:1px solid var(--border);font-size:13px;" id="monthlyFlowAdvice">
+            <strong>📅 每个月新攒下来的钱怎么分：</strong>填好收支后，这里会帮您算好每月结余该往哪个口袋里放。
+          </div>
+        </div>
+
+        <!-- 3. 规划落地参考步骤与具体定期配置方案 -->
+        <div class="card">
+          <div class="card-title">
+            <span>3. 手把手调整与每月定期配置参考方案（附避坑提醒）</span>
+            <span style="font-size:12px;color:var(--amber);font-weight:700;">⚠️ 以下分批节奏仅作测算参考</span>
+          </div>
+          <div id="actionStepsContainer"></div>
+        </div>
+
+        <!-- 4. 未来财富憧憬：攒钱本金与理想收益全景推演 -->
+        <div class="card">
+          <div class="card-title">
+            <span>4. 未来财富憧憬：坚持攒钱与“钱生钱”全景推演（纯数学模型演示）</span>
+            <span id="simEndTotal" style="font-size:14px;color:var(--primary);font-weight:800;">10年后连本带利测算总值：¥0</span>
+          </div>
+
+          <!-- 四张核心憧憬数字汇总卡片 -->
+          <div class="dream-summary-grid">
+            <div class="dream-kpi highlight">
+              <div class="dream-kpi-lbl" id="dreamEndLbl">10年后连本带利总家底</div>
+              <div class="dream-kpi-val" style="color:var(--primary);" id="dreamTotalVal">¥0</div>
+              <div class="dream-kpi-sub" id="dreamMultipleSub">本金翻了 1.00 倍</div>
+            </div>
+            <div class="dream-kpi">
+              <div class="dream-kpi-lbl">自己实打实掏出来的总本金</div>
+              <div class="dream-kpi-val" id="dreamPrincipalVal">¥0</div>
+              <div class="dream-kpi-sub" id="dreamPrincipalBreak">现有底金 ¥0 + 累计新攒 ¥0</div>
+            </div>
+            <div class="dream-kpi profit">
+              <div class="dream-kpi-lbl">理想状态下“钱生钱”总收益</div>
+              <div class="dream-kpi-val" style="color:var(--green);" id="dreamProfitVal">+¥0</div>
+              <div class="dream-kpi-sub" id="dreamProfitShare">纯收益占期末总钱的 0%</div>
+            </div>
+            <div class="dream-kpi">
+              <div class="dream-kpi-lbl">最后一年平均每月躺赚利息</div>
+              <div class="dream-kpi-val" style="color:var(--amber);" id="dreamPassiveMonth">¥0/月</div>
+              <div class="dream-kpi-sub">仅作理想复利数学演示</div>
+            </div>
+          </div>
+
+          <!-- 滑块微调区 -->
+          <div class="sim-controls">
+            <div>
+              <label style="font-size:12px;font-weight:600;display:flex;justify-content:space-between;">
+                <span>每月坚持往里攒多少钱 (元)</span>
+                <span id="simMonthlyLbl" style="color:var(--primary);">¥0</span>
+              </label>
+              <input type="range" id="simMonthly" min="0" max="100000" step="1000" value="0" oninput="drawChart()">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;display:flex;justify-content:space-between;">
+                <span>假设组合综合年收益率</span>
+                <span id="simRateLbl" style="color:var(--primary);">4.0%</span>
+              </label>
+              <input type="range" id="simRate" min="1.5" max="10" step="0.1" value="4.0" oninput="drawChart()">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;display:flex;justify-content:space-between;">
+                <span>打算坚持攒多少年</span>
+                <span id="simYearsLbl" style="color:var(--primary);">10 年</span>
+              </label>
+              <input type="range" id="simYears" min="3" max="30" step="1" value="10" oninput="drawChart()">
+            </div>
+          </div>
+
+          <!-- 复利增长曲线图 -->
+          <canvas id="growthCanvas" width="760" height="240"></canvas>
+          <div style="display:flex;justify-content:center;gap:20px;font-size:12px;margin-top:8px;color:var(--muted);">
+            <span><i style="display:inline-block;width:12px;height:3px;background:#1a56db;vertical-align:middle;margin-right:4px;"></i>连本带利测算总金额（不含房子车子）</span>
+            <span><i style="display:inline-block;width:12px;height:3px;background:#9ca3af;vertical-align:middle;margin-right:4px;"></i>自己实打实掏出来的累计本金</span>
+          </div>
+
+          <!-- 四笔钱各自理想收益贡献拆解 -->
+          <div class="bucket-yield-section">
+            <div class="bucket-yield-title">
+              <span>✨ 理想状态下，“四笔钱”各自能帮您赚多少？（按当前配置比例拆解）</span>
+              <span style="font-size:11.5px;color:var(--muted);font-weight:400;">各项假设收益率随上方滑块等比例联动</span>
+            </div>
+            <div class="bucket-yield-grid" id="bucketYieldGrid"></div>
+
+            <!-- 关键年份里程碑成长表 -->
+            <div style="font-size:13px;font-weight:700;color:var(--text);margin-top:12px;margin-bottom:6px;">
+              🗓️ 未来关键年份财富里程碑一览表（看看坚持攒钱的时间魔力）：
+            </div>
+            <div class="milestone-table-wrap">
+              <table class="milestone-table" id="milestoneTable">
+                <thead>
+                  <tr>
+                    <th>时间节点</th>
+                    <th>自己累计掏出本金</th>
+                    <th>理想状态累计赚出收益</th>
+                    <th>连本带利总金融家底</th>
+                  </tr>
+                </thead>
+                <tbody id="milestoneBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部合规免责声明 -->
+        <div class="disclaimer-footer">
+          <strong>重要提示与免责声明：</strong><br>
+          1. 本工具只是帮您梳理家里账本和学习基础理财常识的计算器，<strong>不推荐任何具体的股票、基金、保险、银行理财或黄金产品</strong>，也不代表任何银行或证券机构的官方意见。<br>
+          2. 页面里算出来的分配比例、分批定投金额、假设年收益率、理想收益明细和曲线图，都是按通用理财公式做的<strong>纯数学推演，不保证未来一定能赚到这么多钱，更不是“保本保息”承诺</strong>。<br>
+          3. 买基金、股票、黄金甚至买卖房子都有涨有跌，可能会亏本。您真要动钱做投资或提前还房贷之前，一定要看清官方的产品说明书和风险提示，拿不准的地方建议去正规银行或持牌机构找专业人员当面咨询。
+        </div>
+      </div>
+
+      <!-- 页面最底部一键保存行动卡片 -->
+      <div class="bottom-save-card no-print">
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--text);">💾 觉得这份体检报告对家里有帮助？</div>
+          <div style="font-size:12.5px;color:#4b5563;margin-top:2px;">所有数据不会保存在网上，关闭网页就会清空，建议保存一份长图或 PDF 到手机/电脑里随时对照。</div>
+        </div>
+        <div class="export-btns">
+          <button class="btn-export btn-export-img" onclick="exportReportImage(this)">🖼️ 保存高清长图到相册</button>
+          <button class="btn-export btn-export-pdf" onclick="exportReportPDF()">📄 导出/打印为 PDF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const fmt = (n) => '¥' + Math.round(n).toLocaleString('zh-CN');
+
+  let currentWeights = { cash: 25, bond: 35, equity: 30, gold: 10 };
+  let latestSnapshot = null;
+
+  function toggleDsConfig() {
+    document.getElementById('dsConfigDrawer').classList.toggle('open');
+  }
+
+  function saveDsConfig() {
+    const k = document.getElementById('dsApiKey').value.trim();
+    const u = document.getElementById('dsApiUrl').value.trim() || 'https://api.deepseek.com/chat/completions';
+    localStorage.setItem('ds_api_key', k);
+    localStorage.setItem('ds_api_url', u);
+  }
+
+  function loadDsConfig() {
+    const k = localStorage.getItem('ds_api_key') || '';
+    const u = localStorage.getItem('ds_api_url') || 'https://api.deepseek.com/chat/completions';
+    document.getElementById('dsApiKey').value = k;
+    document.getElementById('dsApiUrl').value = u;
+  }
+
+  async function askDeepSeekAI() {
+    if (!latestSnapshot) {
+      alert('请先在左侧填写您家的资产或收支数据！');
+      return;
+    }
+    const apiKey = document.getElementById('dsApiKey').value.trim();
+    const apiUrl = document.getElementById('dsApiUrl').value.trim() || 'https://api.deepseek.com/chat/completions';
+    const outBox = document.getElementById('dsOutputBox');
+    const btn = document.getElementById('btnAskDeepSeek');
+
+    if (!apiKey) {
+      document.getElementById('dsConfigDrawer').classList.add('open');
+      outBox.innerText = '⚠️ 请先在上方展开的配置框里填入您的 DeepSeek API Key（sk-开头），保存后即可直接调用国产 DeepSeek-V3 大模型为您做深度点评。';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = '⏳ DeepSeek 正在深度分析...';
+    outBox.innerText = '正在连接国内 DeepSeek 服务器，结合您家的真实资产、负债与月度结余进行深度推演，请稍候...';
+
+    const s = latestSnapshot;
+    const promptText = `你是一位懂中国普通家庭实际情况、说话接地气“大白话”的家庭财务规划顾问。请根据以下用户刚刚录入的最新家庭财务数据，给出一份温暖、务实、不推销任何具体金融产品代码、且严格提示投资风险的深度诊断点评（350字以内，分3点清晰列出）：
+- 全部家底总值：${fmt(s.totalAssets)}（其中房子车子等实物占 ${s.fixedOtherShare.toFixed(1)}%）
+- 剩余总欠款：${fmt(s.debt)}（净家底 ${fmt(s.netWorth)}）
+- 可灵活调配金融资金：${fmt(s.deployableFinPool)}（现金存款 ${fmt(s.cash)}，稳健理财/债券 ${fmt(s.bond)}，股票/基金 ${fmt(s.equity)}，黄金 ${fmt(s.gold)}）
+- 公积金及储蓄保单：${fmt(s.lockedLongReserve)}
+- 每月总到手收入：${fmt(s.totalIncome)}，每月总支出及月供：${fmt(s.totalExpense)}（其中月供 ${fmt(s.loan)}），每月净结余：${fmt(s.netSavings)}
+- 风险偏好：${s.riskLabel}
+- 系统判定画像：${s.profileName}
+
+请用大白话直接指出：1）眼下家里最需要解决的一个财务痛点或隐患；2）未来半年到一年最稳妥的攒钱与配置发力方向；3）一句贴心的风险与心态提醒。`;
+
+    try {
+      const resp = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [
+            { role: 'system', content: '你是专业且严谨的中国家庭财务规划科普助手，所有分析均使用通俗大白话，绝不推荐任何具体股票代码、基金代码或具体金融机构产品，并始终提醒市场有风险。' },
+            { role: 'user', content: promptText }
+          ],
+          temperature: 0.6,
+          max_tokens: 700
+        })
+      });
+
+      if (!resp.ok) {
+        const errText = await resp.text();
+        throw new Error(`接口返回状态 ${resp.status}: ${errText}`);
+      }
+      const data = await resp.json();
+      const reply = data.choices?.[0]?.message?.content?.trim();
+      outBox.innerText = reply || 'DeepSeek 未返回有效内容，请稍后再试。';
+    } catch (err) {
+      outBox.innerText = `❌ 调用 DeepSeek 接口失败：${err.message}\n\n排查建议：1）检查 API Key 是否填写正确且账户有余额；2）确认网络可正常访问 api.deepseek.com。`;
+    } finally {
+      btn.disabled = false;
+      btn.innerText = '✨ 让 DeepSeek 深度分析';
+    }
+  }
+
+  function syncSlider(inpId, rngId) {
+    const val = parseFloat(document.getElementById(inpId).value);
+    document.getElementById(rngId).value = isNaN(val) ? 0 : val;
+  }
+  function syncInput(rngId, inpId) {
+    document.getElementById(inpId).value = document.getElementById(rngId).value;
+  }
+
+  function clearAll() {
+    [
+      'cashSavings', 'providentFund',
+      'existingBond', 'existingEquity', 'existingGold', 'insuranceCashVal',
+      'houseValue', 'carValue', 'otherAssets', 'totalDebt',
+      'myIncome', 'spouseIncome', 'extraIncome',
+      'loanPayment', 'rentPayment', 'carUtility', 'miscExpense'
+    ].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    ['rngLoan', 'rngRent', 'rngCar', 'rngMisc'].forEach(id => {
+      document.getElementById(id).value = 0;
+    });
+    document.getElementById('riskProfile').value = 'balanced';
+    latestSnapshot = null;
+    document.getElementById('dsOutputBox').innerText = '已清空数据。填好左侧家里家底与收支后，点击右上角「✨ 让 DeepSeek 深度分析」即可生成最新诊断。';
+    runEngine(true);
+  }
+
+  function runEngine(animate = false) {
+    const ids = [
+      'cashSavings', 'providentFund',
+      'existingBond', 'existingEquity', 'existingGold', 'insuranceCashVal',
+      'houseValue', 'carValue', 'otherAssets', 'totalDebt',
+      'myIncome', 'spouseIncome', 'extraIncome',
+      'loanPayment', 'rentPayment', 'carUtility', 'miscExpense'
+    ];
+    const raw = {};
+    ids.forEach(id => raw[id] = document.getElementById(id).value.trim());
+
+    const hasAnyInput = Object.values(raw).some(v => v !== '');
+
+    const risk = document.getElementById('riskProfile').value;
+    const riskTextMap = {
+      conservative: '求稳为主心态',
+      balanced: '稳中求进心态',
+      growth: '积极增值心态'
+    };
+    document.getElementById('profileRiskTag').innerText = riskTextMap[risk];
+
+    document.getElementById('lblLoan').innerText = raw.loanPayment === '' ? '未填' : fmt(parseFloat(raw.loanPayment) || 0);
+    document.getElementById('lblRent').innerText = raw.rentPayment === '' ? '未填' : fmt(parseFloat(raw.rentPayment) || 0);
+    document.getElementById('lblCar').innerText  = raw.carUtility  === '' ? '未填' : fmt(parseFloat(raw.carUtility)  || 0);
+    document.getElementById('lblMisc').innerText = raw.miscExpense === '' ? '未填' : fmt(parseFloat(raw.miscExpense) || 0);
+
+    if (!hasAnyInput) {
+      latestSnapshot = null;
+      currentWeights = { cash: 25, bond: 35, equity: 30, gold: 10 };
+      document.getElementById('kpiTotalAsset').innerText = '--';
+      document.getElementById('kpiAssetSplit').innerText = '等待填写家底';
+      document.getElementById('kpiNetWorth').innerText = '--';
+      document.getElementById('kpiNetWorth').style.color = 'var(--text)';
+      document.getElementById('kpiLeverage').innerText = '欠款占总资产 --';
+      document.getElementById('kpiFinAsset').innerText = '--';
+      document.getElementById('kpiFinRatio').innerText = '含存款/理财/股票/黄金';
+
+      document.getElementById('kpiIncome').innerText = '--';
+      document.getElementById('kpiStableRatio').innerText = '等待填写收入';
+      const savEl = document.getElementById('kpiSavings');
+      savEl.innerText = '--';
+      savEl.style.color = 'var(--text)';
+      document.getElementById('kpiSaveRate').innerText = '--';
+      document.getElementById('kpiSaveRate').style.color = 'var(--muted)';
+      document.getElementById('kpiRunway').innerText = '--';
+      document.getElementById('kpiRunwayTag').innerText = '--';
+      document.getElementById('kpiRunwayTag').style.color = 'var(--muted)';
+
+      const pNameEl = document.getElementById('profileName');
+      pNameEl.firstElementChild.innerText = '⏳ 请在左侧填好家里家底和收支，马上出诊断';
+      pNameEl.firstElementChild.style.color = 'var(--muted)';
+      document.getElementById('profileSummary').innerText = '把左边的存款、投资、房子车子、欠款以及每月收入开销填进去，下面会用大白话告诉您家里的钱放得合不合理、该怎么调整。';
+
+      document.getElementById('regimeBadge').innerText = '等待填写数据';
+      const banner = document.getElementById('strategyBanner');
+      banner.className = 'strategy-banner idle';
+      document.getElementById('strategyTag').innerText = '尚未开始测算';
+      document.getElementById('strategyTitle').innerText = '请在左侧填写您家的存款、资产、欠款和每月收支';
+      document.getElementById('strategyDesc').innerHTML = '系统会把您的钱按<strong>“应急活钱（1年内随时用）”、“安稳底仓（3~5年不动）”、“长线增值（5年以上不动）”、“避险压箱底（黄金）”</strong>分成四笔钱，帮您算清楚每笔钱大概放多少更合适。';
+      document.getElementById('assetStructureNote').innerHTML = `<strong>📊 家里全部家底分布情况：</strong>填好资产后，这里会帮您看清“房子车子等不动产”是不是占得太重、手头的活钱够不够用。`;
+      document.getElementById('dispTotalFin').innerText = '¥0';
+
+      document.getElementById('allocBar').innerHTML = `<div class="alloc-seg" style="width:100%;background:#e5e7eb;"></div>`;
+      document.getElementById('allocGrid').innerHTML = `
+        <div class="alloc-item"><div class="alloc-head"><span class="alloc-name"><i class="dot" style="background:#10b981;"></i>1. 应急活钱（1年内随时要用的钱）</span><span class="alloc-pct">--%</span></div><div class="alloc-amt">待测算</div><div class="alloc-note">活期存款、余额宝等零钱理财，保障半年到一年生活费</div></div>
+        <div class="alloc-item"><div class="alloc-head"><span class="alloc-name"><i class="dot" style="background:#1a56db;"></i>2. 安稳底仓（3~5年不用的闲钱）</span><span class="alloc-pct">--%</span></div><div class="alloc-amt">待测算</div><div class="alloc-note">国债、纯债基金或稳健理财，图个安稳不折腾</div></div>
+        <div class="alloc-item"><div class="alloc-head"><span class="alloc-name"><i class="dot" style="background:#8b5cf6;"></i>3. 长线增值（5年以上不动的钱）</span><span class="alloc-pct">--%</span></div><div class="alloc-amt">待测算</div><div class="alloc-note">大盘指数或高分红股票/基金，用时间换长期收益</div></div>
+        <div class="alloc-item"><div class="alloc-head"><span class="alloc-name"><i class="dot" style="background:#f59e0b;"></i>4. 避险压箱底（预防极端风险的钱）</span><span class="alloc-pct">--%</span></div><div class="alloc-amt">待测算</div><div class="alloc-note">银行积存金、投资金条或黄金基金，应对物价波动</div></div>
+      `;
+
+      document.getElementById('monthlyFlowAdvice').innerHTML = `<strong>📅 每个月新攒下来的钱怎么分：</strong>填好收支后，这里会帮您算好每月结余该往哪个口袋里放。`;
+      document.getElementById('actionStepsContainer').innerHTML = `
+        <div style="padding:18px;text-align:center;color:var(--muted);font-size:13.5px;background:#f9fafb;border-radius:10px;border:1px dashed var(--border);">
+          填好左边的数据后，系统会结合您现有的<strong>存款、理财、股票和黄金</strong>，在这里生成<strong>具体的分批定投金额（每月投多少、分几个月投）</strong>和避坑提醒。
+        </div>
+      `;
+
+      document.getElementById('simMonthly').value = 0;
+      document.getElementById('simRate').value = 4.0;
+      drawChart();
+      return;
+    }
+
+    const cash      = Math.max(0, parseFloat(raw.cashSavings) || 0);
+    const provident = Math.max(0, parseFloat(raw.providentFund) || 0);
+    const bond      = Math.max(0, parseFloat(raw.existingBond) || 0);
+    const equity    = Math.max(0, parseFloat(raw.existingEquity) || 0);
+    const gold      = Math.max(0, parseFloat(raw.existingGold) || 0);
+    const insVal    = Math.max(0, parseFloat(raw.insuranceCashVal) || 0);
+    const house     = Math.max(0, parseFloat(raw.houseValue) || 0);
+    const carVal    = Math.max(0, parseFloat(raw.carValue) || 0);
+    const otherVal  = Math.max(0, parseFloat(raw.otherAssets) || 0);
+    const debt      = Math.max(0, parseFloat(raw.totalDebt) || 0);
+
+    const myInc     = Math.max(0, parseFloat(raw.myIncome) || 0);
+    const spInc     = Math.max(0, parseFloat(raw.spouseIncome) || 0);
+    const exInc     = Math.max(0, parseFloat(raw.extraIncome) || 0);
+
+    const loan      = Math.max(0, parseFloat(raw.loanPayment) || 0);
+    const rent      = Math.max(0, parseFloat(raw.rentPayment) || 0);
+    const carExp    = Math.max(0, parseFloat(raw.carUtility) || 0);
+    const misc      = Math.max(0, parseFloat(raw.miscExpense) || 0);
+
+    const liquidTotal     = cash + provident;
+    const investTotal     = bond + equity + gold + insVal;
+    const fixedOtherTotal = house + carVal + otherVal;
+    const totalAssets     = liquidTotal + investTotal + fixedOtherTotal;
+    const netWorth        = totalAssets - debt;
+
+    const deployableFinPool = cash + bond + equity + gold;
+    const lockedLongReserve = provident + insVal;
+
+    const debtAssetRatio = totalAssets > 0 ? (debt / totalAssets) * 100 : (debt > 0 ? 100 : 0);
+    const fixedOtherShare = totalAssets > 0 ? (fixedOtherTotal / totalAssets) * 100 : 0;
+    const otherNonStdShare = totalAssets > 0 ? (otherVal / totalAssets) * 100 : 0;
+    const deployableShare = totalAssets > 0 ? (deployableFinPool / totalAssets) * 100 : 0;
+
+    const totalIncome  = myInc + spInc + exInc;
+    const stableIncome = myInc + spInc;
+    const totalExpense = loan + rent + carExp + misc;
+    const netSavings   = totalIncome - totalExpense;
+    const saveRate     = totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0;
+    const debtToIncome = totalIncome > 0 ? (loan / totalIncome) * 100 : 0;
+    const stableRatio  = totalIncome > 0 ? (stableIncome / totalIncome) * 100 : 0;
+    const runwayMonths = totalExpense > 0 ? (cash / totalExpense) : (cash > 0 ? 999 : 0);
+
+    document.getElementById('kpiTotalAsset').innerText = fmt(totalAssets);
+    document.getElementById('kpiAssetSplit').innerText = `活钱及专项 ${fmt(liquidTotal)} | 投资 ${fmt(investTotal)} | 房车等 ${fmt(fixedOtherTotal)}`;
+
+    const nwEl = document.getElementById('kpiNetWorth');
+    nwEl.innerText = fmt(netWorth);
+    nwEl.style.color = netWorth >= 0 ? 'var(--text)' : 'var(--red)';
+    document.getElementById('kpiLeverage').innerText = `欠款占总家底 ${debtAssetRatio.toFixed(1)}%` + (debtAssetRatio > 50 ? '（欠款偏多）' : '（压力可控）');
+
+    document.getElementById('kpiFinAsset').innerText = fmt(deployableFinPool);
+    document.getElementById('kpiFinRatio').innerText = lockedLongReserve > 0
+      ? `另有公积金/保单 ${fmt(lockedLongReserve)}`
+      : (totalAssets > 0 ? `占全部家底 ${deployableShare.toFixed(1)}%` : '含存款/理财/股票/黄金');
+
+    document.getElementById('kpiIncome').innerText = fmt(totalIncome);
+    document.getElementById('kpiStableRatio').innerText = totalIncome > 0
+      ? (`死工资占 ${stableRatio.toFixed(0)}% | 还贷占收入 ${debtToIncome.toFixed(1)}%`)
+      : '尚未填写收入';
+
+    const savEl = document.getElementById('kpiSavings');
+    savEl.innerText = fmt(netSavings);
+    savEl.style.color = netSavings >= 0 ? 'var(--green)' : 'var(--red)';
+    document.getElementById('kpiSaveRate').innerText = totalIncome > 0 ? `每月能攒下收入的 ${saveRate.toFixed(1)}%` : '待补充收入';
+    document.getElementById('kpiSaveRate').style.color = saveRate >= 30 ? 'var(--green)' : (saveRate >= 10 ? 'var(--amber)' : 'var(--red)');
+
+    document.getElementById('kpiRunway').innerText = runwayMonths >= 120 ? '10年以上' : `${runwayMonths.toFixed(1)} 个月`;
+    const runTag = document.getElementById('kpiRunwayTag');
+    if (runwayMonths < 6) {
+      runTag.innerText = '⚠️ 活钱不够撑半年，有点紧';
+      runTag.style.color = 'var(--red)';
+    } else if (runwayMonths < 12) {
+      runTag.innerText = '勉强够用，建议攒满1年';
+      runTag.style.color = 'var(--amber)';
+    } else {
+      runTag.innerText = '活钱很充足，心里不慌';
+      runTag.style.color = 'var(--green)';
+    }
+
+    const structBox = document.getElementById('assetStructureNote');
+    if (totalAssets === 0) {
+      structBox.innerHTML = `<strong>📊 家里全部家底分布情况：</strong>您还没填存款或房产，眼下最重要的是靠每个月攒钱先把第一桶金存起来。`;
+    } else {
+      const pLiq = (liquidTotal / totalAssets * 100).toFixed(1);
+      const pInv = (investTotal / totalAssets * 100).toFixed(1);
+      const pFix = (fixedOtherTotal / totalAssets * 100).toFixed(1);
+
+      let structComment = '';
+      if (fixedOtherShare >= 75) {
+        structComment = `您家的钱几乎全压在房子车子上了（占了全部家底的 <strong>${pFix}%</strong>，其中房子 ${fmt(house)}、车子 ${fmt(carVal)}、其他 ${fmt(otherVal)}），手头能随时变现生钱的金融资产只有 <strong>${fmt(deployableFinPool)}</strong>。这就是常说的“看着家底厚，其实手头活钱紧”，<strong>千万别再借钱买房了</strong>，以后攒的钱要多往金融账户里放。`;
+      } else if (otherNonStdShare >= 25) {
+        structComment = `提醒一下：您填的“其他有价值资产”（比如收藏品、合伙股份、别人欠您的钱）占了总家底的 <strong>${otherNonStdShare.toFixed(1)}%</strong>（${fmt(otherVal)}）。这类东西<strong>急用钱的时候很难立刻按原价卖掉</strong>，所以系统在算“应急救命钱”时没有把它们算进去。`;
+      } else if (deployableShare >= 55) {
+        structComment = `您家有 <strong>${fmt(deployableFinPool)}</strong> 是能随时调动的金融资产（占一半以上），真遇到事随时能变现，底气非常足，很适合按下面“四笔钱”的思路来打理。`;
+      } else {
+        structComment = `您家的房子车子和手头存款理财搭配得比较匀称，既有安稳的居住保障，手里也有能生钱的活钱。`;
+      }
+
+      const lockNote = lockedLongReserve > 0
+        ? `<br><span style="color:var(--primary);">🔒 长期锁定账户说明：</span>您名下还有 <strong>${fmt(lockedLongReserve)}</strong>（公积金/养老金 ${fmt(provident)} + 储蓄保单退保价值 ${fmt(insVal)}），这笔钱是实打实的家底，但平时不能随便取出来买菜交房租，所以系统把它单列出来，没有算进日常应急钱里。`
+        : '';
+
+      structBox.innerHTML = `
+        <strong>📊 家里全部家底分布一目了然：</strong>
+        活钱及公积金 <strong>${pLiq}%</strong>（${fmt(liquidTotal)}） · 投资理财 <strong>${pInv}%</strong>（${fmt(investTotal)}） · 房子车子等实物 <strong>${pFix}%</strong>（${fmt(fixedOtherTotal)}）
+        <div class="mini-pillar-bar">
+          <div style="width:${pLiq}%;background:#10b981;" title="活钱及专项 ${pLiq}%"></div>
+          <div style="width:${pInv}%;background:#1a56db;" title="投资理财 ${pInv}%"></div>
+          <div style="width:${pFix}%;background:#f59e0b;" title="房子车子等 ${pFix}%"></div>
+        </div>
+        ${structComment}${lockNote}
+      `;
+    }
+
+    let profileName = '';
+    let profileSummary = '';
+    let profileColor = 'var(--primary)';
+    let regime = '';
+    let bannerClass = '';
+    let title = '';
+    let desc = '';
+    let weights = { cash: 25, bond: 35, equity: 30, gold: 10 };
+    let expectedRate = 4.2;
+
+    if (netSavings < 0 || (runwayMonths < 4 && totalExpense > 0)) {
+      profileName = '🚨 手头活钱太紧 · 先保住吃饭交租底线型';
+      profileSummary = `每个月结余只有 ${fmt(netSavings)}，手头随时能取的存款只够撑 ${runwayMonths.toFixed(1)} 个月开销，万一遇到突发状况会非常被动，眼下第一任务是攒够半年生活费。`;
+      profileColor = 'var(--red)';
+      regime = '诊断方案一：先存够救命活钱，别碰高风险';
+      bannerClass = 'danger';
+      title = '体检结果：手头应急钱不够撑半年，眼下千万别乱投资';
+      desc = `您家目前每月净结余为 <strong>${fmt(netSavings)}</strong>，手头随取随用的存款（${fmt(cash)}）只够全家硬撑 <strong>${runwayMonths.toFixed(1)} 个月</strong>（正常家庭至少要留够 6~12 个月生活费）。${equity > 0 ? `您现在还买着 ${fmt(equity)} 的股票/基金，万一家里急用钱赶上股市大跌，割肉卖掉会很亏。` : ''}这个阶段什么花哨理财都别想，把钱老老实实放在随取随用的零钱理财或活期里，先把非必要的日常开销省一省。`;
+      weights = { cash: 85, bond: 15, equity: 0, gold: 0 };
+      expectedRate = 2.0;
+    } else if (debtToIncome > 40 || debtAssetRatio > 55) {
+      profileName = '⚠️ 欠款月供压力大 · 边留备用金边还债型';
+      profileSummary = `每月还贷款占了总收入的 ${debtToIncome.toFixed(1)}%（还欠 ${fmt(debt)}），每个月一发工资一大半先还给了银行，重点是减轻欠款负担。`;
+      profileColor = 'var(--amber)';
+      regime = '诊断方案二：留足一年备用金，多余的钱考虑提前还贷';
+      bannerClass = 'warn';
+      title = '体检结果：还贷压力偏重，建议“留够备用金 + 慢慢提前还贷”';
+      desc = `您家每月还贷款占了总收入的 <strong>${debtToIncome.toFixed(1)}%</strong>，全部欠款占家底的 <strong>${debtAssetRatio.toFixed(1)}%</strong>（还欠 ${fmt(debt)}）。现在银行存款和稳健理财利息普遍不高，如果您的房贷/车贷利息比理财收益高很多，背着大额欠款其实很吃亏。建议先留出够花 8~12 个月的应急钱，剩下的闲钱可以考虑分批提前还掉一部分高息贷款，别拿去冒大险。`;
+      weights = risk === 'growth' ? { cash: 40, bond: 40, equity: 15, gold: 5 } : { cash: 45, bond: 45, equity: 5, gold: 5 };
+      expectedRate = 3.1;
+    } else if (fixedOtherShare >= 75 && deployableFinPool < totalExpense * 18) {
+      profileName = '🏠 房子车子占太多 · 需要多攒生钱活钱型';
+      profileSummary = `房子车子占了全部家底的 ${fixedOtherShare.toFixed(1)}%，但手里能灵活调动的存款理财只有 ${fmt(deployableFinPool)}，属于“不动产值钱、手头活钱偏少”。`;
+      profileColor = 'var(--amber)';
+      regime = '诊断方案三：别再往房子里砸钱，集中攒金融活钱';
+      bannerClass = 'warn';
+      title = '体检结果：家底全压在房子车子上，以后攒的钱要多留活钱';
+      desc = `算上房子车子，您家总家底有 <strong>${fmt(totalAssets)}</strong>，但其中 <strong>${fixedOtherShare.toFixed(1)}%</strong> 都是卖起来很慢的实物资产，真正能随时拿出来用的金融钱只有 <strong>${fmt(deployableFinPool)}</strong>。现在房子不像以前那么容易随时变现，建议不要再加杠杆买房，把每个月攒下来的 ${fmt(netSavings)} 实打实存进金融账户里，先把应急钱和3~5年稳健底仓攒厚实。`;
+      weights = risk === 'conservative' ? { cash: 45, bond: 40, equity: 10, gold: 5 } : { cash: 35, bond: 40, equity: 20, gold: 5 };
+      expectedRate = 3.6;
+    } else if (deployableFinPool < 300000) {
+      profileName = '🌱 攒钱起步期 · 靠每月结余滚雪球型';
+      profileSummary = `每月能攒下收入的 ${saveRate.toFixed(1)}%（攒钱能力很强），只是目前手头存量金融钱（${fmt(deployableFinPool)}）还不到30万，正处于靠每月工资慢慢攒家底的阶段。`;
+      profileColor = 'var(--amber)';
+      regime = '诊断方案四：先存安稳底仓，再用每月结余慢慢定投';
+      bannerClass = 'warn';
+      title = '体检结果：每月攒钱能力不错，重点是“先求稳、再靠每月结余滚大”';
+      desc = `您家每个月能攒下收入的 <strong>${saveRate.toFixed(1)}%</strong>（每月净剩 ${fmt(netSavings)}），造血能力很好，只是目前手头可调配的存款投资（${fmt(deployableFinPool)}）体量还不大。建议先把现有的钱分成“应急活钱”和“3~5年安稳底仓”打好地基，然后每个月发工资攒下的钱，拿出一小部分坚持每月定投，用时间把雪球滚大。`;
+      weights = risk === 'conservative' ? { cash: 55, bond: 35, equity: 5, gold: 5 } : { cash: 45, bond: 30, equity: 20, gold: 5 };
+      expectedRate = 3.8;
+    } else if (deployableFinPool >= 3000000) {
+      profileName = '👑 手头活钱丰厚 · 分散打理防贬值型';
+      profileSummary = `手头有 ${fmt(deployableFinPool)} 能灵活调配的金融钱（总家底 ${fmt(totalAssets)}），重点是别全趴在银行吃低息，要按“四笔钱”分散放好。`;
+      profileColor = 'var(--purple)';
+      regime = '诊断方案五：大额资金分银行存放 + 四笔钱科学搭配';
+      bannerClass = 'vip';
+      title = '体检结果：手头资金很充裕，要防着“存款利息越降越低”';
+      desc = `您手头有 <strong>${fmt(deployableFinPool)}</strong> 可调配资金，每个月还能再攒 <strong>${fmt(netSavings)}</strong>。现在银行定期存款利率一降再降，如果几百万全放在一家银行存短期定期，不仅到期后利息越来越少，还超过了单家银行50万的存款保险上限。建议按“1年内应急钱 + 3~5年安稳钱 + 5年以上长线钱 + 黄金压箱底”分散打理。`;
+      if (risk === 'conservative') {
+        weights = { cash: 20, bond: 55, equity: 15, gold: 10 };
+        expectedRate = 3.6;
+      } else if (risk === 'balanced') {
+        weights = { cash: 15, bond: 40, equity: 35, gold: 10 };
+        expectedRate = 4.6;
+      } else {
+        weights = { cash: 10, bond: 30, equity: 48, gold: 12 };
+        expectedRate = 5.5;
+      }
+    } else {
+      profileName = '✅ 收支健康 · 攻守兼备稳步增值型';
+      profileSummary = `每月能攒下收入的 ${saveRate.toFixed(1)}%（月攒 ${fmt(netSavings)}），应急钱够厚、欠款压力也不大（占总家底 ${debtAssetRatio.toFixed(1)}%），完全可以把钱按时间长短科学分配。`;
+      profileColor = 'var(--green)';
+      regime = '诊断方案六：留足应急钱，其余按3~5年与5年以上分开打理';
+      bannerClass = 'good';
+      title = '体检结果：家里底子很稳，别让闲钱全趴在低息存款里睡大觉';
+      desc = `您家每个月能攒下收入的 <strong>${saveRate.toFixed(1)}%</strong>（每月净剩 ${fmt(netSavings)}），手头可调配资金有 <strong>${fmt(deployableFinPool)}</strong>，欠款只占总家底的 <strong>${debtAssetRatio.toFixed(1)}%</strong>${debt > 0 ? `（还欠 ${fmt(debt)} 压力很小）` : ''}。现在银行定存利息越来越低，全存定期跑不赢物价上涨，建议把钱按用钱时间分开：留够近期应急钱，3~5年不用的放稳健底仓，5年以上不动的闲钱分批做长线配置。`;
+      if (risk === 'conservative') {
+        weights = { cash: 30, bond: 50, equity: 12, gold: 8 };
+        expectedRate = 3.4;
+      } else if (risk === 'balanced') {
+        weights = { cash: 25, bond: 35, equity: 30, gold: 10 };
+        expectedRate = 4.2;
+      } else {
+        weights = { cash: 15, bond: 30, equity: 45, gold: 10 };
+        expectedRate = 5.2;
+      }
+    }
+
+    currentWeights = weights;
+
+    latestSnapshot = {
+      totalAssets, fixedOtherShare, debt, netWorth,
+      deployableFinPool, cash, bond, equity, gold, lockedLongReserve,
+      totalIncome, totalExpense, loan, netSavings,
+      riskLabel: riskTextMap[risk], profileName
+    };
+
+    if (stableRatio < 55 && exInc > 0) {
+      desc += `<br><span style="color:#b45309;font-weight:600;">⚡ 收入来源提醒：</span>您家有 <strong>${(100 - stableRatio).toFixed(0)}%</strong> 的收入靠副业、房租或奖金，不如死工资那么稳定，实际操作时建议在“应急活钱”里多留两三个月的生活费。`;
+    }
+
+    const pNameEl = document.getElementById('profileName');
+    pNameEl.firstElementChild.innerText = profileName;
+    pNameEl.firstElementChild.style.color = profileColor;
+    document.getElementById('profileSummary').innerText = profileSummary;
+
+    document.getElementById('regimeBadge').innerText = regime;
+    const banner = document.getElementById('strategyBanner');
+    banner.className = 'strategy-banner ' + bannerClass;
+    document.getElementById('strategyTag').innerText = regime;
+    document.getElementById('strategyTitle').innerText = title;
+    document.getElementById('strategyDesc').innerHTML = desc;
+    document.getElementById('dispTotalFin').innerText = fmt(deployableFinPool);
+
+    const targetCash   = deployableFinPool * (weights.cash / 100);
+    const targetBond   = deployableFinPool * (weights.bond / 100);
+    const targetEquity = deployableFinPool * (weights.equity / 100);
+    const targetGold   = deployableFinPool * (weights.gold / 100);
+
+    const diffCash   = targetCash - cash;
+    const diffBond   = targetBond - bond;
+    const diffEquity = targetEquity - equity;
+    const diffGold   = targetGold - gold;
+
+    const formatDiff = (diff, curVal) => {
+      if (deployableFinPool === 0) return '目前手里 ¥0';
+      if (Math.abs(diff) < 1000) return `目前已有 ${fmt(curVal)}（刚刚好，不用动）`;
+      return diff > 0
+        ? `<span style="color:var(--green);">目前已有 ${fmt(curVal)} → 建议慢慢补足 ${fmt(diff)}</span>`
+        : `<span style="color:var(--amber);">目前已有 ${fmt(curVal)} → 多出 ${fmt(Math.abs(diff))} 可分流去别处</span>`;
+    };
+
+    const segments = [
+      {
+        name: '1. 应急活钱（1个月~1年内随时要用的钱）',
+        pct: weights.cash,
+        amt: targetCash,
+        diffHtml: formatDiff(diffCash, cash),
+        color: '#10b981',
+        note: '放活期存款、余额宝或零钱通等，保证今天要花钱明天就能取出来，用来应付日常开销和突发急事'
+      },
+      {
+        name: '2. 安稳底仓（3~5年不用的闲钱）',
+        pct: weights.bond,
+        amt: targetBond,
+        diffHtml: formatDiff(diffBond, bond),
+        color: '#1a56db',
+        note: '放国债、纯债基金或银行稳健理财里，图个波动小、稳稳当当攒利息，做家里资产的“压舱石”'
+      },
+      {
+        name: '3. 长线增值（5年以上不动的钱）',
+        pct: weights.equity,
+        amt: targetEquity,
+        diffHtml: formatDiff(diffEquity, equity),
+        color: '#8b5cf6',
+        note: weights.equity === 0
+          ? '眼下家里活钱紧或欠款多，暂时不建议拿钱去股市里冒风险'
+          : '投向大盘指数基金或高分红股票/基金，短期会有涨跌，必须用5年以上不急用的闲钱分批定投'
+      },
+      {
+        name: '4. 避险压箱底（预防极端风险的钱）',
+        pct: weights.gold,
+        amt: targetGold,
+        diffHtml: formatDiff(diffGold, gold),
+        color: '#f59e0b',
+        note: weights.gold === 0
+          ? '先把应急活钱攒够了，以后有余力再考虑配一点黄金'
+          : '买银行积存金、投资金条或黄金基金，防止物价大幅上涨或遇到极端经济波动，当成压箱底的保险'
+      }
+    ];
+
+    document.getElementById('allocBar').innerHTML = segments.map(s =>
+      `<div class="alloc-seg" style="width:${s.pct}%;background:${s.color};" title="${s.name}: ${s.pct}%"></div>`
+    ).join('');
+
+    document.getElementById('allocGrid').innerHTML = segments.map(s => `
+      <div class="alloc-item">
+        <div class="alloc-head">
+          <span class="alloc-name"><i class="dot" style="background:${s.color};"></i>${s.name}</span>
+          <span class="alloc-pct">${s.pct}%</span>
+        </div>
+        <div class="alloc-amt">参考金额：${fmt(s.amt)}</div>
+        <div class="alloc-diff">${s.diffHtml}</div>
+        <div class="alloc-note">${s.note}</div>
+      </div>
+    `).join('');
+
+    const mCash = netSavings > 0 ? netSavings * (weights.cash / 100) : 0;
+    const mBond = netSavings > 0 ? netSavings * (weights.bond / 100) : 0;
+    const mEqOnly = netSavings > 0 ? netSavings * (weights.equity / 100) : 0;
+    const mGoldOnly = netSavings > 0 ? netSavings * (weights.gold / 100) : 0;
+
+    const flowEl = document.getElementById('monthlyFlowAdvice');
+    if (netSavings <= 0) {
+      flowEl.innerHTML = `<strong>📅 每个月新攒下来的钱怎么分：</strong>您家目前每月结余为 <strong>${fmt(netSavings)}</strong>，暂时攒不下钱，建议先记两个月账单、砍掉不必要的花销，等每月能存下钱了再按比例分配。`;
+    } else {
+      flowEl.innerHTML = `<strong>📅 每个月新攒下来的 ${fmt(netSavings)} 自动分流参考：</strong><br>
+      ① <strong>${fmt(mCash)}/月</strong> 存进“1年内应急活钱”；② <strong>${fmt(mBond)}/月</strong> 放进“3~5年安稳底仓”；③ <strong>${fmt(mEqOnly)}/月</strong> 定期定投“5年以上长线增值”；④ <strong>${fmt(mGoldOnly)}/月</strong> 定投“避险压箱底黄金”（以上仅作数学测算参考）。`;
+    }
+
+    let cashPlanHTML = '';
+    if (diffCash > 1000) {
+      const mAlloc = mCash > 500 ? mCash : Math.max(1000, netSavings * 0.5);
+      const needMonths = mAlloc > 0 ? Math.ceil(diffCash / mAlloc) : 12;
+      cashPlanHTML = `
+        <div class="plan-box">
+          <strong>📋 具体补充执行方案（先把应急口袋填满）：</strong><br>
+          您目前应急活钱还差约 <strong>${fmt(diffCash)}</strong>。建议发工资当天设置一张银行卡自动转存，不要等月底剩多少再存：
+          <div class="plan-grid">
+            <div class="plan-pill"><span>每月固定转存金额</span><b>${fmt(mAlloc)} / 月</b></div>
+            <div class="plan-pill"><span>预计攒满所需时间</span><b>约 ${needMonths} 个月</b></div>
+            <div class="plan-pill"><span>存放方式建议</span><b>随取随用零钱理财</b></div>
+          </div>
+        </div>
+      `;
+    } else if (diffCash < -1000) {
+      const excessCash = Math.abs(diffCash);
+      cashPlanHTML = `
+        <div class="plan-box">
+          <strong>📋 具体腾挪执行方案（把多出来的低息活钱分流出去）：</strong><br>
+          您手头的现金存款比日常应急需要多出了约 <strong>${fmt(excessCash)}</strong>（这笔钱就是下面第 2、3、4 步分批配置的“弹药库”）。建议先把这 <strong>${fmt(excessCash)}</strong> 单独转进一张专门的“待投资中转卡”里，避免平时买菜购物顺手花掉，然后按下面算好的每月金额分批转出。
+        </div>
+      `;
+    } else {
+      cashPlanHTML = `
+        <div class="plan-box">
+          <strong>📋 具体执行方案：</strong>您现有的 <strong>${fmt(cash)}</strong> 应急活钱刚刚达标！平时不动它，以后每月新攒下的钱只需拿 <strong>${fmt(mCash)}/月</strong> 跟着生活开销涨跌微调补充即可。
+        </div>
+      `;
+    }
+
+    const bankSplitTip = targetCash > 500000
+      ? `您这笔随时要用的应急钱有 ${fmt(targetCash)}，超过了国家《存款保险条例》规定的“单家银行最多赔付50万”的上限。最稳妥的办法是<strong>分开存在 2~3 家不同的正规银行</strong>，每家别超过50万。`
+      : `哪怕是存零钱理财或货币基金，也建议<strong>分放在 2 个不同的大平台或银行</strong>，避免万一某个平台临时限制大额快速提现时耽误急用。`;
+
+    let bondPlanHTML = '';
+    if (weights.bond === 0) {
+      bondPlanHTML = `<div class="step-action">当前测算模型下暂不单独配置此类资产。</div>`;
+    } else if (diffBond > 1000) {
+      const stockBatch6m = diffBond / 6;
+      const totalMonthlyBond = stockBatch6m + mBond;
+      bondPlanHTML = `
+        <div class="step-action">您目前已有 <strong>${fmt(bond)}</strong> 稳健理财/债券，距离测算目标 <strong>${fmt(targetBond)}</strong> 还差约 <strong>${fmt(diffBond)}</strong>。固收类资产波动小，不用拖太久，建议<strong>分 6 个月（半年）逐步建仓到位</strong>：</div>
+        <div class="plan-box">
+          <strong>📋 具体分批配置参考方案（半年期阶梯建仓法）：</strong><br>
+          把存量缺口 <strong>${fmt(diffBond)}</strong> 拆成 <strong>6 份</strong>，每月固定1号或发薪日买入 1 份，防止买在短期利率低点；等 6 个月存量配齐后，以后每月只需用新攒下的工资定投 <strong>${fmt(mBond)}/月</strong> 即可：
+          <div class="plan-grid">
+            <div class="plan-pill"><span>存量分批买入（前6个月）</span><b>${fmt(stockBatch6m)} / 月</b></div>
+            <div class="plan-pill"><span>加上每月新结余定投</span><b>合计 ${fmt(totalMonthlyBond)} / 月</b></div>
+            <div class="plan-pill"><span>6个月后日常定投节奏</span><b>${fmt(mBond)} / 月</b></div>
+          </div>
+        </div>
+      `;
+    } else if (diffBond < -1000) {
+      bondPlanHTML = `
+        <div class="step-action">您手里已经有 <strong>${fmt(bond)}</strong> 稳健理财/债券，比测算目标 <strong>${fmt(targetBond)}</strong> 多出了约 <strong>${fmt(Math.abs(diffBond))}</strong>。</div>
+        <div class="plan-box">
+          <strong>📋 具体调整方案：</strong>不用急着提前赎回（避免产生手续费），等手头的定期理财或债券到期后，拿 <strong>${fmt(Math.abs(diffBond))}</strong> 出来，分批补充到下面偏少的长线增值或黄金仓位里；以后每月新结余按 <strong>${fmt(mBond)}/月</strong> 正常补充即可。
+        </div>
+      `;
+    } else {
+      bondPlanHTML = `
+        <div class="step-action">您现有的 <strong>${fmt(bond)}</strong> 稳健底仓非常扎实，与目标基本一致。</div>
+        <div class="plan-box">
+          <strong>📋 后续定期配置方案：</strong>存量不用大动，以后每个月发工资后，定期定额往里追加 <strong>${fmt(mBond)}/月</strong>，让安稳底仓跟着家庭收入一起慢慢长大。
+        </div>
+      `;
+    }
+
+    const bondPitfall = weights.bond >= 30
+      ? `买国债和理财有两个大坑要避开：第一，<strong>“记账式国债”虽然每天都能买卖，但价格天天变，没到期提前卖可能会亏本金</strong>，想锁死利息就选“储蓄国债”；第二，现在国家规定所有理财都不准保本，<strong>凡是有人跟您吹嘘“绝对保本、年息8%以上”的，十有八九是骗局或高风险非标产品，千万别信！</strong>`
+      : `现阶段家里活钱不算特别多，如果买银行理财，<strong>千万别买那种“封闭期两三年、中间一分钱取不出来”的产品</strong>，尽量挑存期短、急用钱时能灵活赎回的品种。`;
+
+    let equityActionHTML = '';
+    if (weights.equity === 0) {
+      equityActionHTML = `
+        <div class="step-action">按您家现在的欠款压力和应急钱情况，<strong>现阶段这笔钱的参考金额是 ¥0</strong>。${equity > 0 ? `您手里目前还拿着 <strong>${fmt(equity)}</strong> 股票或偏股基金，建议趁市场反弹时分 3~6 次逐步卖出，换成银行存款先把家里应急钱补足。` : `现阶段管住手，别听别人推荐去买股票或高风险基金。`}</div>
+        <div class="pitfall-box"><strong>⚠️ 大白话避坑提醒：</strong>手头紧或者欠债多的时候，<strong>最忌讳抱着“借钱炒股、一把翻身”的赌徒心态</strong>！股市短期跌个20%~30%太常见了，万一家里急用钱被迫在最低点割肉，会直接拖垮家庭财务。</div>
+      `;
+    } else if (diffEquity > 1000) {
+      const monthsSplit = diffEquity >= 300000 ? 18 : 12;
+      const stockDcaMonthly = diffEquity / monthsSplit;
+      const totalDcaMonthly = stockDcaMonthly + mEqOnly;
+      const totalDcaWeekly = totalDcaMonthly / 4.33;
+      equityActionHTML = `
+        <div class="step-action">您目前持有 <strong>${fmt(equity)}</strong> 股票/偏股基金，距离测算目标 <strong>${fmt(targetEquity)}</strong> 还有约 <strong>${fmt(diffEquity)}</strong> 的增配空间。权益市场波动大，最科学的方法是<strong>“存量分批定投 + 每月工资定投”双轮驱动</strong>：</div>
+        <div class="plan-box">
+          <strong>📋 具体定期定投（DCA）执行参考方案（建议分 ${monthsSplit} 个月建仓）：</strong><br>
+          把存量缺口 <strong>${fmt(diffEquity)}</strong> 拆成 <strong>${monthsSplit} 份</strong>（用 ${monthsSplit === 18 ? '1年半' : '1年'} 时间慢慢买完），加上每月新攒工资里的 <strong>${fmt(mEqOnly)}/月</strong>，开通证券或基金软件里的<strong>“自动定投”</strong>功能（选按月定投或每周四定投都可以，跌了自动多买份额、涨了少买份额）：
+          <div class="plan-grid">
+            <div class="plan-pill"><span>存量分批定投（前${monthsSplit}个月）</span><b>${fmt(stockDcaMonthly)} / 月</b></div>
+            <div class="plan-pill"><span>加上每月工资定投（前${monthsSplit}个月合计）</span><b>${fmt(totalDcaMonthly)} / 月（约 ${fmt(totalDcaWeekly)}/周）</b></div>
+            <div class="plan-pill"><span>${monthsSplit}个月建仓完成后长期定投</span><b>${fmt(mEqOnly)} / 月</b></div>
+          </div>
+        </div>
+        <div class="pitfall-box"><strong>⚠️ 大白话避坑提醒：</strong><strong>千万别一把全仓冲进去（“一把梭”）！</strong>买股票和偏股基金没有任何人保本，短期亏个10%~20%非常正常，如果拿明年要买房、交学费的钱去买，心态肯定会崩；定投期间遇到大跌千万别慌着停掉，坚持扣款才能摊低成本。</div>
+      `;
+    } else if (diffEquity < -1000) {
+      const overEq = Math.abs(diffEquity);
+      equityActionHTML = `
+        <div class="step-action">您目前持有的股票/偏股基金（<strong>${fmt(equity)}</strong>）比测算均衡线（<strong>${fmt(targetEquity)}</strong>）高出了约 <strong>${fmt(overEq)}</strong>，风险敞口略大。</div>
+        <div class="plan-box">
+          <strong>📋 具体止盈平衡方案：</strong>建议分 <strong>3~6 个月</strong> 逐步减持超出部分的 <strong>${fmt(overEq)}</strong>（每月落袋为安约 <strong>${fmt(overEq / 4)}</strong>），把赚到的钱转入“3~5年安稳底仓”或“黄金避险仓”锁住胜利果实；后续每月新结余按 <strong>${fmt(mEqOnly)}/月</strong> 正常定投即可。
+        </div>
+        <div class="pitfall-box"><strong>⚠️ 大白话避坑提醒：</strong>见好就收、动态再平衡才是长期赚钱的关键，不要因为近期行情好就把全家的保命钱都加仓到高波动股票里。</div>
+      `;
+    } else {
+      equityActionHTML = `
+        <div class="step-action">您现有的 <strong>${fmt(equity)}</strong> 长线仓位比例与您的心理承受力非常契合。</div>
+        <div class="plan-box">
+          <strong>📋 后续长期定投方案：</strong>现有持仓拿稳不动，以后每个月发工资后，坚持自动定投 <strong>${fmt(mEqOnly)}/月</strong>（或折合每周定投 <strong>${fmt(mEqOnly / 4.33)}/周</strong>），用时间换取复利。
+        </div>
+        <div class="pitfall-box"><strong>⚠️ 大白话避坑提醒：</strong>切忌频繁买卖追涨杀跌，真正能赚到大钱的定投，靠的是“拿得住 5 年以上”。</div>
+      `;
+    }
+
+    let goldActionHTML = '';
+    if (weights.gold === 0) {
+      goldActionHTML = `
+        <div class="step-action">${gold > 0 ? `按眼下的情况，这笔钱参考金额是 <strong>¥0</strong>，您手里目前有 <strong>${fmt(gold)}</strong> 黄金，如果近期手头紧，金价合适时可以变现一部分补充家庭应急钱。` : `眼下先把应急活钱攒够了，这笔压箱底的钱暂时先不配（¥0）。`}</div>
+      `;
+    } else if (diffGold > 1000) {
+      const goldBatch12m = diffGold / 12;
+      const totalGoldMonthly = goldBatch12m + mGoldOnly;
+      goldActionHTML = `
+        <div class="step-action">您目前持有 <strong>${fmt(gold)}</strong> 黄金资产，距离测算目标 <strong>${fmt(targetGold)}</strong> 还有约 <strong>${fmt(diffGold)}</strong> 空间。黄金价格受国际局势影响波动不小，同样建议<strong>分 12 个月（1年）定期定投</strong>，不猜金价高低：</div>
+        <div class="plan-box">
+          <strong>📋 具体定期买金参考方案（银行积存金 / 黄金基金定投）：</strong><br>
+          开通正规银行 App 的“积存金自动定投”或证券账户的黄金基金定投，前 12 个月把存量缺口分批买入，1 年后转为每月小额长线定投：
+          <div class="plan-grid">
+            <div class="plan-pill"><span>存量分批定投（前12个月）</span><b>${fmt(goldBatch12m)} / 月</b></div>
+            <div class="plan-pill"><span>加上每月工资定投（前12个月合计）</span><b>${fmt(totalGoldMonthly)} / 月</b></div>
+            <div class="plan-pill"><span>1年配齐后长期定投</span><b>${fmt(mGoldOnly)} / 月</b></div>
+          </div>
+        </div>
+      `;
+    } else if (diffGold < -1000) {
+      goldActionHTML = `
+        <div class="step-action">您手里目前已经有 <strong>${fmt(gold)}</strong> 黄金资产，比测算线高出约 <strong>${fmt(Math.abs(diffGold))}</strong>。</div>
+        <div class="plan-box">
+          <strong>📋 具体执行方案：</strong>黄金本身不会像债券那样每年派利息，家里配 10% 左右当压箱底就够了，<strong>现阶段暂停继续加仓黄金</strong>，等以后总家底变大了比例自然会回到合理区间。
+        </div>
+      `;
+    } else {
+      goldActionHTML = `
+        <div class="step-action">您现有的 <strong>${fmt(gold)}</strong> 黄金仓位比例刚刚好。</div>
+        <div class="plan-box">
+          <strong>📋 后续定期配置方案：</strong>存量安心拿着，以后每个月发工资后顺手定投 <strong>${fmt(mGoldOnly)}/月</strong> 积存金即可。
+        </div>
+      `;
+    }
+
+    document.getElementById('actionStepsContainer').innerHTML = `
+      <div class="step-card">
+        <div class="step-header"><span class="step-num">第一步 · 保住生活底线</span><span class="step-title">留够“1年内随时要用的应急活钱”：目标约 ${fmt(targetCash)}</span></div>
+        <div class="step-action">您现在手头现金存款有 <strong>${fmt(cash)}</strong>，测算建议保留约 <strong>${fmt(targetCash)}</strong>（够全家正常生活 ${totalExpense > 0 ? (targetCash/totalExpense).toFixed(1) : '12'} 个月）在随取随用的零钱理财或活期里。</div>
+        ${cashPlanHTML}
+        <div class="pitfall-box"><strong>⚠️ 大白话避坑提醒：</strong>${bankSplitTip}</div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-header"><span class="step-num">第二步 · 攒稳当利息</span><span class="step-title">建好“3~5年不用的安稳底仓”：目标约 ${fmt(targetBond)}</span></div>
+        ${bondPlanHTML}
+        <div class="pitfall-box"><strong>⚠️ 大白话避坑提醒：</strong>${bondPitfall}</div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-header"><span class="step-num">第三步 · 跑赢物价上涨</span><span class="step-title">打理“5年以上不动的长线钱”：目标约 ${fmt(targetEquity)}</span></div>
+        ${equityActionHTML}
+      </div>
+
+      <div class="step-card">
+        <div class="step-header"><span class="step-num">第四步 · 极端风险保险</span><span class="step-title">配一点“避险压箱底黄金”：目标约 ${fmt(targetGold)}</span></div>
+        ${goldActionHTML}
+        <div class="pitfall-box"><strong>⚠️ 大白话避坑提醒：</strong>买黄金有三个大忌：第一，<strong>别去金店买高溢价的黄金首饰当投资</strong>，买的时候每克多花一百多块工费，卖的时候按原料价回收直接亏一大截，要买就买银行投资金条、积存金或黄金基金；第二，黄金价格也会大起大落，家里配个10%左右就够了；第三，<strong>绝对不要碰带杠杆的炒黄金、外盘期货</strong>，十赌九输！</div>
+      </div>
+    `;
+
+    const simMonthlyInput = document.getElementById('simMonthly');
+    const suggestedMonthly = Math.max(0, Math.round(netSavings * 0.8 / 500) * 500);
+    simMonthlyInput.max = Math.max(100000, suggestedMonthly * 2);
+    simMonthlyInput.value = suggestedMonthly;
+    document.getElementById('simRate').value = expectedRate.toFixed(1);
+
+    drawChart();
+
+    if (animate) {
+      const panel = document.getElementById('outputPanel');
+      panel.classList.remove('flash');
+      void panel.offsetWidth;
+      panel.classList.add('flash');
+    }
+  }
+
+  function calcCompound(startPrincipal, monthlyAdd, annualRatePct, years) {
+    const r = (annualRatePct / 100) / 12;
+    let total = startPrincipal;
+    let principal = startPrincipal;
+    for (let m = 0; m < years * 12; m++) {
+      total = (total + monthlyAdd) * (1 + r);
+      principal += monthlyAdd;
+    }
+    return { total, principal, profit: total - principal };
+  }
+
+  function drawChart() {
+    const cash   = Math.max(0, parseFloat(document.getElementById('cashSavings').value) || 0);
+    const bond   = Math.max(0, parseFloat(document.getElementById('existingBond').value) || 0);
+    const equity = Math.max(0, parseFloat(document.getElementById('existingEquity').value) || 0);
+    const gold   = Math.max(0, parseFloat(document.getElementById('existingGold').value) || 0);
+    const startFin = cash + bond + equity + gold;
+
+    const monthlyAdd = parseFloat(document.getElementById('simMonthly').value) || 0;
+    const annualRate = parseFloat(document.getElementById('simRate').value) || 0;
+    const years = parseInt(document.getElementById('simYears').value) || 10;
+
+    document.getElementById('simMonthlyLbl').innerText = fmt(monthlyAdd);
+    document.getElementById('simRateLbl').innerText = annualRate.toFixed(1) + '%';
+    document.getElementById('simYearsLbl').innerText = years + ' 年';
+
+    const monthlyRate = (annualRate / 100) / 12;
+    const totals = [startFin];
+    const principals = [startFin];
+
+    let curTotal = startFin;
+    let curPrincipal = startFin;
+
+    for (let y = 1; y <= years; y++) {
+      for (let m = 0; m < 12; m++) {
+        curTotal = (curTotal + monthlyAdd) * (1 + monthlyRate);
+        curPrincipal += monthlyAdd;
+      }
+      totals.push(curTotal);
+      principals.push(curPrincipal);
+    }
+
+    const totalProfit = curTotal - curPrincipal;
+    const newSavedPrincipal = monthlyAdd * 12 * years;
+    const multiple = curPrincipal > 0 ? (curTotal / curPrincipal) : 1;
+    const profitPctOfTotal = curTotal > 0 ? (totalProfit / curTotal) * 100 : 0;
+    const lastYearMonthlyPassive = (curTotal * (annualRate / 100)) / 12;
+
+    document.getElementById('simEndTotal').innerText = `${years}年后连本带利测算总值：${fmt(curTotal)}`;
+    document.getElementById('dreamEndLbl').innerText = `${years}年后连本带利总家底`;
+    document.getElementById('dreamTotalVal').innerText = fmt(curTotal);
+    document.getElementById('dreamMultipleSub').innerText = curPrincipal > 0
+      ? `总本金增长了 ${((multiple - 1) * 100).toFixed(0)}%（约 ${multiple.toFixed(2)} 倍）`
+      : '请滑选每月攒钱金额';
+
+    document.getElementById('dreamPrincipalVal').innerText = fmt(curPrincipal);
+    document.getElementById('dreamPrincipalBreak').innerText = `现有底金 ${fmt(startFin)} + ${years}年新攒 ${fmt(newSavedPrincipal)}`;
+
+    document.getElementById('dreamProfitVal').innerText = '+' + fmt(totalProfit);
+    document.getElementById('dreamProfitShare').innerText = `纯收益占期末总钱的 ${profitPctOfTotal.toFixed(1)}%`;
+
+    document.getElementById('dreamPassiveMonth').innerText = fmt(lastYearMonthlyPassive) + '/月';
+
+    const baseRates = { cash: 1.6, bond: 3.0, equity: 6.8, gold: 4.5 };
+    const weightedBase =
+      (currentWeights.cash / 100) * baseRates.cash +
+      (currentWeights.bond / 100) * baseRates.bond +
+      (currentWeights.equity / 100) * baseRates.equity +
+      (currentWeights.gold / 100) * baseRates.gold;
+    const scaleFactor = weightedBase > 0 ? (annualRate / weightedBase) : 1;
+
+    const bucketDefs = [
+      { key: 'cash',   label: '1. 应急活钱（1年内随时用）', color: '#10b981', w: currentWeights.cash,   r: baseRates.cash * scaleFactor },
+      { key: 'bond',   label: '2. 安稳底仓（3~5年不动）',   color: '#1a56db', w: currentWeights.bond,   r: baseRates.bond * scaleFactor },
+      { key: 'equity', label: '3. 长线增值（5年以上不动）', color: '#8b5cf6', w: currentWeights.equity, r: baseRates.equity * scaleFactor },
+      { key: 'gold',   label: '4. 避险压箱底（黄金配置）',   color: '#f59e0b', w: currentWeights.gold,   r: baseRates.gold * scaleFactor }
+    ];
+
+    document.getElementById('bucketYieldGrid').innerHTML = bucketDefs.map(b => {
+      if (b.w === 0) {
+        return `
+          <div class="by-card" style="background:#f9fafb;opacity:0.8;">
+            <div class="by-top">
+              <span><i class="dot" style="background:${b.color};"></i>${b.label}</span>
+              <span style="color:var(--muted);">占比 0%</span>
+            </div>
+            <div class="by-nums" style="color:var(--muted);">当前方案下暂未分配此项资金（累计本金 ¥0，测算收益 ¥0）</div>
+          </div>
+        `;
+      }
+      const bStart = startFin * (b.w / 100);
+      const bMonthly = monthlyAdd * (b.w / 100);
+      const res = calcCompound(bStart, bMonthly, b.r, years);
+      return `
+        <div class="by-card">
+          <div class="by-top">
+            <span><i class="dot" style="background:${b.color};"></i>${b.label}（占${b.w}%）</span>
+            <span style="color:${b.color};">假设年化 ${b.r.toFixed(1)}%</span>
+          </div>
+          <div class="by-nums">
+            • ${years}年累计投入本金：<strong>${fmt(res.principal)}</strong><br>
+            • 理想状态赚出纯收益：<strong style="color:var(--green);">+${fmt(res.profit)}</strong><br>
+            • 期末该口袋连本带利：<strong>${fmt(res.total)}</strong>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const candidateYears = [1, 2, 3, 5, 8, 10, 15, 20, 25, 30].filter(y => y < years);
+    const step = Math.max(1, Math.ceil(candidateYears.length / 5));
+    const milestoneYears = candidateYears.filter((_, idx) => idx % step === 0);
+    milestoneYears.push(years);
+
+    document.getElementById('milestoneBody').innerHTML = milestoneYears.map((y, idx) => {
+      const isLast = idx === milestoneYears.length - 1;
+      const pVal = principals[y];
+      const tVal = totals[y];
+      const gVal = tVal - pVal;
+      return `
+        <tr>
+          <td>${isLast ? `🎯 第 ${y} 年（目标达成）` : `第 ${y} 年末`}</td>
+          <td>${fmt(pVal)}</td>
+          <td style="color:var(--green);font-weight:700;">+${fmt(gVal)}</td>
+          <td style="color:var(--primary);font-weight:800;">${fmt(tVal)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const canvas = document.getElementById('growthCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const padL = 68, padR = 24, padT = 20, padB = 30;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+    const maxVal = Math.max(...totals, 10000) * 1.08;
+
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+
+    for (let i = 0; i <= 4; i++) {
+      const y = padT + (plotH / 4) * i;
+      const val = maxVal * (1 - i / 4);
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(W - padR, y);
+      ctx.stroke();
+      ctx.fillText((val / 10000).toFixed(0) + '万', padL - 8, y + 4);
+    }
+
+    ctx.textAlign = 'center';
+    for (let i = 0; i <= years; i++) {
+      if (years > 15 && i % 2 !== 0 && i !== years) continue;
+      const x = padL + (plotW / years) * i;
+      ctx.fillText(i + '年', x, H - 8);
+    }
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#9ca3af';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    principals.forEach((v, i) => {
+      const x = padL + (plotW / years) * i;
+      const y = padT + plotH * (1 - v / maxVal);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.beginPath();
+    totals.forEach((v, i) => {
+      const x = padL + (plotW / years) * i;
+      const y = padT + plotH * (1 - v / maxVal);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = '#1a56db';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.lineTo(padL + plotW, padT + plotH);
+    ctx.lineTo(padL, padT + plotH);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
+    grad.addColorStop(0, 'rgba(26, 86, 219, 0.22)');
+    grad.addColorStop(1, 'rgba(26, 86, 219, 0.01)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+  }
+
+  async function exportReportImage(btnEl) {
+    const target = document.getElementById('printableReportArea');
+    const oldText = btnEl.innerHTML;
+    btnEl.innerHTML = '⏳ 正在生成高清长图...';
+    btnEl.disabled = true;
+
+    try {
+      if (typeof html2canvas === 'undefined') {
+        alert('截图组件仍在加载中，请稍等2秒再点一次，或直接点击旁边的“导出/打印为 PDF”保存！');
+        return;
+      }
+      const canvas = await html2canvas(target, {
+        scale: 2,
+        backgroundColor: '#f4f6f9',
+        useCORS: true,
+        logging: false
+      });
+      const link = document.createElement('a');
+      const today = new Date().toISOString().slice(0, 10);
+      link.download = `家庭财务体检与资产配置报告_${today}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (e) {
+      alert('长图导出遇到浏览器限制，已为您自动切换为 PDF/打印保存模式！');
+      window.print();
+    } finally {
+      btnEl.innerHTML = oldText;
+      btnEl.disabled = false;
+    }
+  }
+
+  function exportReportPDF() {
+    window.print();
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    loadDsConfig();
+    const todayStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+    document.getElementById('reportDateTag').innerText = `测算日期：${todayStr}`;
+    runEngine(false);
+  });
+</script>
+</body>
+</html>
